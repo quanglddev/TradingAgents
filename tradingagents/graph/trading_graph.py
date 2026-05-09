@@ -56,6 +56,8 @@ class TradingAgentsGraph:
         debug=False,
         config: Dict[str, Any] = None,
         callbacks: Optional[List] = None,
+        agent_llm_map: Optional[Dict[str, Any]] = None,
+        reflector_llm: Optional[Any] = None,
     ):
         """Initialize the trading agents graph and components.
 
@@ -64,6 +66,17 @@ class TradingAgentsGraph:
             debug: Whether to run in debug mode
             config: Configuration dictionary. If None, uses default config
             callbacks: Optional list of callback handlers (e.g., for tracking LLM/tool stats)
+            agent_llm_map: Optional pre-built ``{agent_name: llm}`` map.
+                When provided, the per-agent LLMs in ``GraphSetup``
+                bypass the single-vendor deep/quick split. Used by the
+                ``tradingagents-quorum`` CLI to route each agent to its
+                own best-fit frontier model. Unmapped agents fall back
+                to ``thinking_policy`` selection.
+            reflector_llm: Optional pre-built LLM for the post-mortem
+                Reflector. When provided, it overrides the default
+                ``quick_thinking_llm``. The Reflector runs at the start
+                of the *next* same-ticker run, so a cheap model is
+                appropriate even in quorum mode.
         """
         self.debug = debug
         self.config = config or DEFAULT_CONFIG
@@ -76,29 +89,40 @@ class TradingAgentsGraph:
         os.makedirs(self.config["data_cache_dir"], exist_ok=True)
         os.makedirs(self.config["results_dir"], exist_ok=True)
 
-        # Initialize LLMs with provider-specific thinking configuration
-        llm_kwargs = self._get_provider_kwargs()
+        if agent_llm_map:
+            # Quorum mode: each agent gets its own LLM. We still need
+            # ``deep_thinking_llm`` and ``quick_thinking_llm`` populated
+            # for any agents not in the map and for SignalProcessor's
+            # backwards-compatible constructor argument.
+            map_values = list(agent_llm_map.values())
+            fallback = (
+                agent_llm_map.get("Research Manager")
+                or agent_llm_map.get("Portfolio Manager")
+                or map_values[0]
+            )
+            self.deep_thinking_llm = fallback
+            self.quick_thinking_llm = reflector_llm or fallback
+        else:
+            llm_kwargs = self._get_provider_kwargs()
+            if self.callbacks:
+                llm_kwargs["callbacks"] = self.callbacks
 
-        # Add callbacks to kwargs if provided (passed to LLM constructor)
-        if self.callbacks:
-            llm_kwargs["callbacks"] = self.callbacks
+            deep_client = create_llm_client(
+                provider=self.config["llm_provider"],
+                model=self.config["deep_think_llm"],
+                base_url=self.config.get("backend_url"),
+                **llm_kwargs,
+            )
+            quick_client = create_llm_client(
+                provider=self.config["llm_provider"],
+                model=self.config["quick_think_llm"],
+                base_url=self.config.get("backend_url"),
+                **llm_kwargs,
+            )
 
-        deep_client = create_llm_client(
-            provider=self.config["llm_provider"],
-            model=self.config["deep_think_llm"],
-            base_url=self.config.get("backend_url"),
-            **llm_kwargs,
-        )
-        quick_client = create_llm_client(
-            provider=self.config["llm_provider"],
-            model=self.config["quick_think_llm"],
-            base_url=self.config.get("backend_url"),
-            **llm_kwargs,
-        )
+            self.deep_thinking_llm = deep_client.get_llm()
+            self.quick_thinking_llm = quick_client.get_llm()
 
-        self.deep_thinking_llm = deep_client.get_llm()
-        self.quick_thinking_llm = quick_client.get_llm()
-        
         self.memory_log = TradingMemoryLog(self.config)
 
         # Create tool nodes
@@ -115,6 +139,7 @@ class TradingAgentsGraph:
             self.tool_nodes,
             self.conditional_logic,
             config=self.config,
+            agent_llm_map=agent_llm_map,
         )
 
         self.propagator = Propagator()

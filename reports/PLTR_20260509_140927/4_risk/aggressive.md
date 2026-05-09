@@ -1,0 +1,158 @@
+
+Aggressive Analyst: Trader assumptions:
+- Plan rates PLTR Overweight with measurable structural invalidation at $122.68 bear-flag measured move — (stated) — edge: plan-defined risk framework
+- Immediate 1/3 entry captures first-mover advantage; no wait condition means latency cost avoided — (stated) — edge: early entry ahead of catalyst re-rating
+- Bear case already priced in post-earnings decline, so reward/risk skews favorable — (implied) — edge: mean-reversion from oversold sentiment extremes
+- PLTR fundamentals intact, record growth, will eventually reassert — (implied) — edge: gap between operational acceleration and price
+- Stop below bear-flag level limits downside, preserving convexity — (stated) — edge: asymmetric payoff structure
+
+My critique:
+Trader’s stated edge is vague — “plan says Overweight” is not an edge, it’s a label. No specific catalyst from reports cited. However, aggressive lens finds a real, specific, report-grounded edge: record Q1 2026 earnings ($1.63B, +85% YoY, per sentiment/news) met with stock decline, Jefferies sell call “shorting the CEO,” Burry short cited (sentiment, news). That creates extreme bearish narrative compression against accelerating fundamentals — classic reflexive squeeze preconditions (sentiment report, Med conf). Edge exists but trader must anchor to this divergence, not to plan rating alone. Convexity: stop at $122.68 caps downside ~11%; upside if squeeze ignites targets $163-$219 (Barchart $219, Zacks 40% upside; news, sentiment). Payoff skewed. Opportunity cost: if squeeze starts, missing first tranche now forces chasing higher; waiting for moving-average confirmations erases asymmetry. Latency cost high — first-mover premium dictates initial size now, not later. Market report shows unanimous bearish technicals, but sentiment shows wall of worry — asymmetric setup. Edge audit: **Edge: specific if anchored to sentiment/fundamentals divergence and squeeze asymmetry; otherwise vague — must be sharpened.**
+
+Rebuttals:
+- No Conservative or Neutral turns provided; cannot quote. Preemptive engagement: hypothetical Conservative “trend is bearish, death cross active, all MAs declining — counter-trend long is fighting the tape.” → Per sentiment report, “Extreme one-sided bearish media framing … against record fundamental acceleration is the type of disjunction that historically precedes mean reversion” (Med conf). Trend is known; the edge is precisely the extreme bearishness creating a reflexive floor.
+- Hypothetical Neutral “wait for close above $141.50 VWMA/Bollinger mid for confirmation.” → Per market report, $141.50 is first structural hurdle; waiting for that close forfeits the asymmetric payoff if squeeze triggers from current levels. Latency cost: the first 10-15% of a squeeze move occurs before MA crosses confirm.
+- Hypothetical Conservative “RSI at 45, not oversold — no buy signal.” → Per market report, “RSI oversold is not a buy signal in strong downtrends” — agreed. Edge here is not technical oversold; it’s sentiment overshoot (short the CEO, short the model) against fundamental acceleration, which technicals do not capture.
+- Hypothetical Neutral “position sizing too aggressive given high ATR.” → Per market report, ATR $6.58 demands “undersized positions, 50–67% of normal.” Trader uses 1/3 target weight — consistent with reduced sizing for high vol. Can further scale to 50% of normal if overall portfolio correlation high.
+
+Risk controls:
+- First 1/3 only; second tranche triggers ONLY on close above $141.50 (VWMA/Bollinger mid cluster per market report) with rising volume. Third tranche on close above $145.70 (50 SMA). No averaging down below $137.80.
+- Hard stop $122.68 intact. Additionally, time stop: if no close above $141.50 within 15 trading days and RSI falls below 40, cut remaining position — decay of squeeze thesis.
+- Hedge: cannot assess from context (no options data in reports). If available, long put spreads or OTM puts at $125 strike could further convexify while preserving upside.
+- Sizing: position risk (entry to stop) must not exceed 1.5% of portfolio NAV; size shares accordingly given ~$15.12 gap.
+
+What would change my view:
+- Close below $130 with expanding ATR and volume surge (bear case activation per market report) — > flip to neutral, exit early.
+- New fundamental negative: Q2 guidance implies revenue growth deceleration below 50% YoY (flags per fundamentals report) — breaks bull case, exit.
+- Insider selling cluster post-earnings emerges (Form 4 filings) — per sentiment report, would break contrarian thesis, exit.
+Aggressive Analyst: Trader assumptions:
+- Plan Overweight rating authorizes immediate 1/3 entry — `(stated)` — `intended edge: plan-delegated authorization`
+- No-wait entry captures first-mover advantage before re-rating — `(stated)` — `intended edge: latency-cost avoidance`
+- Bear case priced in post-earnings decline, reward/risk favorable — `(implied)` — `intended edge: mean-reversion from sentiment extreme`
+- Fundamentals intact, record growth will reassert — `(implied)` — `intended edge: operational-valuation gap close`
+- Stop at $122.68 bear-flag measured move caps downside, asymmetric payoff — `(stated)` — `intended edge: convexity`
+- Extreme bearish narrative vs accelerating fundamentals = reflexive squeeze preconditions — `(implied, from Aggressive)` — `intended edge: short-squeeze fuel`
+
+My critique:
+- Convexity real: stop $122.68 ~11% below $137.80; upside targets $163 (200 SMA), $219 (Barchart DCF) per News, Sentiment — payoff skewed. (High) Breaks if: stop gapped through on no liquidity.
+- Edge specific if anchored to documented divergence: Q1 2026 $1.63B +85% YoY (Sentiment/News) met stock decline, Jefferies “shorting the CEO,” Burry short cited (News, Sentiment). Per Sentiment: “extreme one-sided bearish media framing … against record fundamental acceleration is the type of disjunction that historically precedes mean reversion” (Med conf). Edge is sentiment/fundamentals gap, not plan rating. (Med) Breaks if: fundamentals decelerate sharply next quarter.
+- Opportunity cost massive: waiting for MA confirmations (close above $141.50) per Market Report means surrendering first 10-15% of squeeze move. If squeeze ignites, entry cost rises, asymmetry compresses. Latency cost high — now is the time before bearish narrative cracks. (High) Breaks if: no squeeze occurs and price just grinds; then entry at $141.50 is better — but that’s ex-post, not ex-ante.
+- Edge audit: `Edge: specific` — anchored to documented sentiment extreme (Moneywise “shorting the CEO,” Jefferies sell) vs Q1 2026 record growth; convexity via hard stop. Weakness: no specific catalyst date (no buyback, insider buy, contract announcement in reports). Edge must be sharpened by monitoring catalyst triggers (insider filings, contract news). Still, asymmetry justifies pilot position.
+
+Rebuttals:
+- Conservative said “entering counter-trend long into STRONG_DOWNTREND with death cross widening, all 8 indicators bearish — unanimous alignment” → Per Sentiment: “extreme one-sided bearish media framing … against record fundamental acceleration is the type of disjunction that historically precedes mean reversion” (Med conf). Technicals are known; edge is precisely that extreme bearishness creates reflexive floor. Base rates from pure technicals miss sentiment/fundamental disjunction.
+- Conservative said “squeeze thesis unverified: no SI% of float, days-to-cover … Cannot quantify squeeze probability” → Concede positioning data missing (Sentiment). But qualitative squeeze fuel exists: named shorts (Jefferies “shorting the CEO,” Burry) with unusually aggressive language are fragile; if fundamentals hold, any positive news triggers covering. Squeeze mechanism not dependent on precise SI% — narrative fragility is the catalyst precursor.
+- Conservative said “pre-mortem … growth deceleration … deferred revenue +44.9% lagging revenue +70%, AR +81% outpacing … tax rate 1.4% unsustainable, SBC $684M” → Concede red flags real (Fundamentals, High/Med conf). But they are known and arguably discounted after post-earnings drop. Trade is not multi-year hold; it’s mean-reversion/squeeze play with defined 11% stop. If growth actually decelerates, stop protects.
+- Neutral said “bull case lacks near-term catalyst trigger … No specific event … price may drift” → Concede no specific date catalyst in reports. Catalyst can be endogenous: extreme bearish sentiment unwinding itself is reflexive trigger. Also monitorable: insider buys, contract announcements, short-squeeze ignition — all would emerge suddenly, rewarding positioned size. Waiting for catalyst confirmation forfeits first-mover asymmetry.
+- Neutral said “Aggressive’s 1.5% position risk is too high for counter-trend, low-probability … in high-vol regime” → Fractional Kelly intuition: even 15% bull case (Market Report) with 62% upside (Barchart $219) vs 85% loss probability capped at 11% yields positive expected value if bull case probability understated due to sentiment factor. 1.5% NAV risk on asymmetric payoff is not reckless. But given high ATR $6.58 (Market Report), trim to 1.25% NAV preserves convexity while respecting volatility.
+- Both miss: the 15% bull case from Market Report is purely technical, ignoring sentiment catalyst. Sentiment report (Med conf) flags “contrarian signal” and “wall of worry” that historically precedes mean reversion. Probability of upside tail is higher than 15% when sentiment is this extreme — cannot quantify precisely but directionally supports larger pilot.
+
+Risk controls:
+- First tranche 1/3 target weight. Position risk (entry $137.80 to stop $122.68 = $15.12) capped at 1.25% NAV — size shares accordingly. Convexity preserved: downside bounded, upside uncapped.
+- Hard stop $122.68. No averaging down. If price closes above $141.50 (VWMA/Bollinger mid) with volume expansion (Market Report), add second tranche immediately — captures breakout without waiting for slower MA cross. Third tranche on close above $145.70 (50 SMA).
+- Time stop: if no close above $141.50 within 15 trading days and RSI <40, cut half position — decay of squeeze thesis, capital freed for re-entry if catalyst emerges.
+- Hedge: reports lack options data; if market offers, buy OTM puts at $125 strike to create hard floor while retaining upside — further convexifies.
+
+What would change my view:
+- Insider selling cluster post-earnings (Form 4 filings) → breaks contrarian thesis; exit entire position immediately. (Per Sentiment: insider buying would confirm, selling breaks it)
+- Close below $130 with expanding ATR above $7.00 and volume surge (bear case activation per Market Report) → flip neutral, exit early before $122.68 stop hit; bear trend accelerating.
+- Q1 2026 filing shows revenue growth YoY deceleration below 50% or deferred revenue growth <40% (Fundamentals watchlist) → growth sustainability broken; bull case invalidated, exit.
+Aggressive Analyst: Trader assumptions:
+- Plan Overweight rating authorizes immediate 1/3 entry — `(stated)` — `intended edge: plan-delegated authority`
+- No-wait entry captures first-mover advantage ahead of re-rating — `(stated)` — `intended edge: latency-cost avoidance`
+- Bear case priced in after post-earnings decline, reward/risk favorable — `(implied)` — `intended edge: mean-reversion from sentiment extreme`
+- Fundamentals intact, record growth will reassert — `(implied)` — `intended edge: operational-valuation gap close`
+- Stop at $122.68 bear-flag measured move caps downside, asymmetric payoff — `(stated)` — `intended edge: convexity`
+- Extreme bearish narrative vs accelerating fundamentals = reflexive squeeze preconditions — `(implied)` — `intended edge: short-squeeze fuel`
+
+My critique:
+- Convexity real: entry ~$137.80, stop $122.68 caps downside 11%; upside to $163 (200 SMA per Market Report), $219 (Barchart DCF per News/Sentiment). Payoff skewed across multiple upside targets. (High) Breaks if: stop gapped through on no liquidity.
+- Edge specific, anchored to documented divergence: Q1 2026 $1.63B +85% YoY (Sentiment/News) met stock decline, Jefferies “shorting the business model… shorting the CEO”, Burry short cited (News, Sentiment). Per Sentiment: “Extreme one-sided bearish media framing … against record fundamental acceleration is the type of disjunction that historically precedes mean reversion” (Med conf). Edge is sentiment/fundamentals gap plus extreme narrative fragility, not plan rating. (Med) Breaks if: fundamental deceleration crystallizes next quarter.
+- Opportunity cost massive: waiting for close above $141.50 (VWMA/Bollinger mid per Market Report) surrenders first 10-15% of squeeze move. If Jefferies capitulates or insider buying emerges, re-rating will be sudden and sharp; latency cost high. First-mover premium justifies immediate pilot. (High)
+- Capital decay risk acknowledged: no specific date catalyst (no buyback, insider buy, contract announcement in reports). However, catalyst can be endogenous — extreme bearish sentiment unwinding itself is reflexive trigger (Sentiment Med conf). Position must be sized for catalyst absence but not zero.
+- Edge audit: `Edge: specific` — documented sentiment extreme + record fundamental acceleration + capped downside. Not a pure technical reversal play; it is a sentiment-mean-reversion / narrative-fragility play. Weakness: unverified positioning fragility. Still, asymmetry justifies pilot with strict risk cap.
+
+Rebuttals:
+- Conservative said “Positive EV requires bull case >15.1% to offset 11% loss. Sentiment factor might add a few percentage points, but cannot double it to ~30% without positioning data. Speculative.” → Bull case 15% from Market Report is purely technical, excludes sentiment catalyst. Per Sentiment: “extreme one-sided bearish media framing … historically precedes mean reversion” and “wall of worry … contrarian signal” (Med conf). Sentiment extreme can double effective tail probability relative to technicals alone. Cannot quantify precisely, but directionally probability understated. Even modest lift to 20-25% shifts EV positive at capped 11% loss. (Med) Breaks if: new sell-side initiations deepen bearish consensus without new negative data — would disprove fragility.
+- Conservative said “squeeze mechanism unverified … cannot confirm SI% … Burry short, Jefferies ‘shorting the CEO’ are anecdotes, not positioning fragility.” → Concede positioning data missing. But narrative fragility alone can trigger covering: named, prominent shorts using personally aggressive language (“shorting the CEO”) are fragile against accelerating fundamentals. Any positive news (contract, buyback, insider buy) force rapid covering. Squeeze does not require high SI% if narrative is brittle. (Med) Breaks if: multiple weeks pass with no short covering despite static price — fragility thesis decays.
+- Conservative said “beat-and-drop pattern (PLTR and SOUN per News) classic growth-peak warning, not reflexive buy signal.” → Beat-and-drop warns of deceleration, but already priced after 11%+ drop from earnings highs. Trade is not denying growth-peak risk; it is betting that market has overshot pessimism relative to record 85% growth rate. Stop at bear-flag measured move $122.68 exits if deceleration confirmed. (Med)
+- Neutral said “Latency cost materializes only in 15% tail; in 85% base+bear, waiting preserves capital.” → Base rate 15% is technical-only; sentiment extreme lifts tail probability. Moreover, waiting for $141.50 close sacrifices convexity: entry moves $3.70 higher, stop still $122.68, so downside expands to ~13% while upside compresses. First-mover premium is risk/reward enhancement, not just latency. (High)
+- Neutral said “extreme bearish sentiment unwinding itself is reflexive trigger … but that is a conditions precedent, not a catalyst with defined timing.” → Concede no calendar catalyst. But reflexive unwinding often initiates suddenly — e.g., a single blog post or analyst upgrade. Unpredictable timing is reason to hold pilot position, not reason to wait. (Med)
+- Both push sizing to 0.5% NAV risk. At 0.5%, even if bull probability 25% with 62% upside, 1% loss tolerance on portfolio is negligible attrition. Fractional Kelly on asymmetric payoff supports >0.5% for convex bets. 1.25% NAV risk is aggressive but not reckless when payoff is structurally asymmetric and stop hard. (Med) Breaks if: portfolio already heavily allocated to correlated high-growth software names — correlation would demand smaller size; cannot verify from context.
+
+Risk controls:
+- First tranche 1/3 target weight. Position risk (entry $137.80 to hard stop $122.68 = $15.12) capped at 1.25% NAV — size shares accordingly. Convexity intact: downside bounded, upside uncapped.
+- Hard stop $122.68 plan-specified. No averaging down. Second tranche ONLY on close above $141.50 (VWMA/Bollinger mid per Market Report) with volume expansion AND MACD histogram ticking positive. Third tranche on close above $145.70 (50 SMA) same conditions. Prevents premature full-sizing on noise.
+- Adopt early-exit from Neutral/Conservative: close below $133.02 (5/8 intraday low) with ATR expanding above $7.00 → cut half position, adjust stop to $130.00. Pre-empts bear acceleration gap-loss.
+- Time stop: if no close above $141.50 within 15 trading days AND RSI remains below 40, exit remaining position — squeeze thesis decayed, capital freed for re-entry if catalyst emerges. Hedge not specified (no options data in reports); if market offers long OTM puts at $125 strike, add to further convexify.
+
+What would change my view:
+- Insider selling cluster post-earnings (Form 4 filings) → breaks contrarian thesis; exit entire position immediately. (Per Sentiment: insider buying confirms, selling breaks)
+- Close below $130 with expanding ATR above $7.00 and volume surge (bear case activation per Market Report) → flip neutral, exit early before $122.68 stop hit; bear trend accelerating.
+- Q1 2026 filing shows revenue growth YoY deceleration below 50% or deferred revenue growth <40% (Fundamentals watchlist) → growth sustainability broken; bull case invalidated, exit.
+Aggressive Analyst: Trader assumptions:
+- Plan Overweight rating justifies immediate 1/3 entry — (stated) — intended edge: plan-delegated authority
+- No-wait entry captures first-mover advantage before re-rating — (stated) — intended edge: latency-cost avoidance
+- Bear case priced in post-earnings decline, reward/risk favorable — (implied) — intended edge: mean-reversion from sentiment extreme
+- Fundamentals intact, record growth will reassert — (implied) — intended edge: gap close between operations and price
+- Stop at $122.68 bear-flag measured move caps downside, asymmetric payoff — (stated) — intended edge: convexity
+- Extreme bearish narrative vs accelerating fundamentals = reflexive squeeze preconditions — (implied, from debate) — intended edge: narrative-fragility squeeze fuel
+
+My critique:
+- Convexity real, cited: entry ~$137.80, stop $122.68 caps downside 11%; upside targets $163 (200 SMA per Market Report), $219 (Barchart DCF per News/Sentiment). Payoff skewed. (High) Breaks if: gap through stop on no liquidity.
+- Edge specific, anchored to documented divergence: Q1 2026 $1.63B +85% YoY (Sentiment/News) met stock decline, Jefferies “shorting the business model… shorting the CEO,” Burry short cited (News, Sentiment). Per Sentiment: “extreme one-sided bearish media framing … against record fundamental acceleration is the type of disjunction that historically precedes mean reversion” (Med conf). Edge is sentiment/fundamentals gap plus extreme narrative fragility, not plan label. (Med) Breaks if: Q1 2026 filing shows revenue growth decelerating sharply.
+- Opportunity cost massive: waiting for close above $141.50 (VWMA/Bollinger mid per Market Report) surrenders first 10-15% of squeeze move. If Jefferies capitulates or insider buying surfaces, re-rating sudden and sharp; latency cost high. First-mover premium justifies immediate pilot. (High)
+- Capital decay risk acknowledged: no specific date catalyst (no buyback, insider buy, contract announcement in reports). However, catalyst can be endogenous — extreme bearish sentiment unwinding itself is reflexive trigger (Sentiment Med conf). Position sized for catalyst absence but not zero. (Med)
+- Edge audit: `Edge: specific` — documented sentiment extreme + record fundamental acceleration + capped downside. Not pure technical reversal; it is sentiment-mean-reversion / narrative-fragility play. Weakness: unverified positioning fragility. Asymmetry justifies pilot with strict risk cap.
+
+Rebuttals:
+- Conservative said “Base rate hostile … combined 85% downside continuation … Sentiment extreme might lift bull odds but cannot verify magnitude” → Base rate from pure technicals misses the non-technical catalyst. Per Sentiment: “extreme one-sided bearish media framing … historically precedes mean reversion” (Med conf). When bears become personally aggressive (“shorting the CEO”), the distribution of outcomes shifts left-tail-thinner than technicals alone suggest. Exact magnitude unquantified, but directionally tail probability higher than 15%. (Med)
+- Conservative said “Squeeze mechanism unverified … cannot confirm SI% … Burry short, Jefferies are anecdotes, not positioning fragility” → Concede positioning data missing. But narrative fragility alone creates covering risk: prominently named shorts using unusually aggressive language are brittle against accelerating fundamentals. Any positive news (contract, insider buy) forces rapid covering. Squeeze does not require high SI% if narrative is brittle. (Med) Breaks if: multiple weeks pass with no short covering despite static price — fragility thesis decays.
+- Neutral said “Latency cost only materializes in 15% tail. In 85% base+bear, waiting preserves capital” → Fails. The 15% is technical-only base rate; sentiment extreme lifts tail probability. Moreover, waiting for $141.50 close expands downside from 11% to ~13% (entry $3.70 higher, same stop) while upside compresses. First-mover premium is risk/reward enhancement, not just latency. Probability-weighted cost of waiting is higher than they calculate if bull probability is understated. (Med)
+- Conservative said “beat-and-drop pattern … classic growth-peak warning, not reflexive buy signal” → Beat-and-drop warns of deceleration, but already priced after 11%+ drop from earnings highs. Trade is not denying growth-peak risk; it’s betting market has overshot pessimism relative to record 85% growth rate. Stop at $122.68 exits if deceleration confirmed. (Med)
+- Both push sizing to 0.5% NAV risk. At 0.5%, even if bull probability 20-25% with 62% upside, expected gain on portfolio negligible — erases purpose of convexity. Fractional Kelly on asymmetric payoff supports >0.5% for convex bets. 1.25% NAV risk is aggressive but not reckless when downside bounded and upside uncapped. (Med) Breaks if: portfolio already heavily correlated to high-growth software names; cannot verify from context.
+- Conservative said “Ergodicity risk: unspecified confirmation triggers” → Concede. Trader plan leaves “confirmation triggers” vague; sequence risk real. Hard-coded add-on triggers: close above $141.50 with volume expansion AND MACD histogram positive. No add-ons below $141.50 regardless of plan rating. This prevents premature full-sizing. (High)
+
+Risk controls:
+- First tranche 1/3 target weight. Position risk (entry $137.80 to hard stop $122.68 = $15.12) capped at 1.25% NAV — size shares accordingly. Convexity intact: downside bounded, upside uncapped.
+- Hard stop $122.68 plan-specified. No averaging down. Second tranche ONLY on close above $141.50 (VWMA/Bollinger mid per Market Report) with volume expansion AND MACD histogram positive. Third on close above $145.70 (50 SMA) same conditions. No add-ons below $141.50.
+- Adopt early-exit from Neutral/Conservative: close below $133.02 (5/8 intraday low) with ATR expanding above $7.00 → cut half position, adjust stop to $130.00. Preempts bear acceleration gap-loss.
+- Time stop: if no close above $141.50 within 15 trading days AND RSI remains below 40, exit remaining position — squeeze thesis decayed. Hedge not specified in reports; if market offers long OTM puts at $125 strike, add to further convexify.
+
+What would change my view:
+- Insider selling cluster post-earnings (Form 4 filings) → breaks contrarian thesis; exit entire position immediately. (Per Sentiment: insider buying confirms, selling breaks)
+- Close below $130 with expanding ATR above $7.00 and volume surge (bear case activation per Market Report) → flip neutral, exit early before $122.68 stop hit; bear trend accelerating.
+- Q1 2026 filing shows revenue growth YoY deceleration below 50% or deferred revenue growth <40% (Fundamentals watchlist) → growth sustainability broken; bull case invalidated, exit.
+Aggressive Analyst: Trader assumptions:
+- Plan Overweight rating authorizes immediate 1/3 entry — (stated) — intended edge: plan-delegated authority
+- No-wait entry captures first-mover advantage before re-rating — (stated) — intended edge: latency-cost avoidance
+- Bear case already priced in post-earnings decline — (implied) — intended edge: mean-reversion from sentiment extreme
+- Fundamentals intact, record growth will reassert — (implied) — intended edge: gap close between operations and price
+- Stop at $122.68 bear-flag measured move caps downside, asymmetric payoff — (stated) — intended edge: convexity
+- Extreme bearish narrative vs accelerating fundamentals = reflexive squeeze preconditions — (implied) — intended edge: narrative-fragility squeeze
+
+My critique:
+- Convexity real: entry ~$137.80, stop $122.68 caps downside ~11%. Upside targets $163 (200 SMA per Market Report), $219 (Barchart DCF per News/Sentiment). Payoff skewed — multiple upside magnets, single hard floor. (High) Breaks if: gap through $122.68 on no liquidity.
+- Edge specific, anchored to documented divergence: Q1 2026 revenue $1.63B +85% YoY (News, Sentiment) met stock decline, Jefferies “shorting the business model… shorting the CEO,” Burry short cited (News, Sentiment). Per Sentiment: “extreme one-sided bearish media framing… against record fundamental acceleration is the type of disjunction that historically precedes mean reversion” (Med conf). Edge is sentiment/fundamentals gap plus narrative fragility — not plan label. (Med) Breaks if: Q1 2026 filing shows revenue growth decelerating sharply below 50% YoY.
+- Opportunity cost massive: waiting for close above $141.50 (VWMA/Bollinger mid per Market Report) surrenders first 10-15% of squeeze move. If Jefferies capitulates or insider buying surfaces, re-rate sudden and sharp — latency cost high. First-mover premium justifies immediate pilot. (High) Breaks if: 15 technical-only bull probability unchanged by sentiment — but sentiment report (Med) flags contrarian signal, historically lifts tail odds.
+- Capital decay acknowledged: no date-specific catalyst in reports (no buyback, insider buy, contract announcement). But catalyst can be endogenous — extreme bearish sentiment unwinding itself is reflexive trigger (Sentiment Med conf). Position sized for catalyst absence but not zero. (Med)
+- Edge audit: `Edge: specific` — documented sentiment extreme + record fundamental acceleration + capped downside via hard stop. Not pure technical reversal; it is sentiment-mean-reversion / narrative-fragility play. Weakness: unverified positioning data (SI%, borrow). Still, asymmetry justifies pilot with strict risk cap. Sizing at 0.5% NAV (Neutral/Conservative) erases convexity purpose — expected gain negligible, defeats reason to trade asymmetry. Fractional Kelly for convex bets supports >0.5% with capped loss.
+
+Rebuttals:
+- Conservative said “Base rate hostile… all 8 indicators bearish, death cross widening, 85% combined downside continuation” → Base rate from pure technicals misses non-technical catalyst. Per Sentiment: extreme disjunction “historically precedes mean reversion” (Med conf). When bears get personally aggressive (“shorting the CEO”), distribution tilts thinner-left than technicals alone model. Cannot quantify precise lift, but directionally bull probability >15%. (Med)
+- Conservative said “convexity must be probability-weighted… Even 62% upside yields negative expectancy unless bull probability substantially understated” → Concede probability-weighting necessary. But distance skew deep: 11% loss vs 62% upside. Sentiment lift tilts bull odds above technical 15% — even 20-25% shifts EV positive given capped loss. Distance + tilt = actionable asymmetry, not fantasy. (Med) Breaks if: short-interest data shows low fragility, killing squeeze thesis.
+- Conservative said “Opportunity cost only materializes in 15% tail… waiting preserves capital” → Fails. Waiting for $141.50 close moves entry up $3.70, widens downside to ~13% while compressing upside — risk/reward decays even without tail event. Moreover, tail probability likely understated by technical-only base rate. First-mover premium is structural advantage, not speculation. (Med)
+- Neutral said “Latency cost only materializes in 15% tail… waiting reduces risk” → Same refutation: waiting degrades convexity independent of tail probability. (Med)
+- Conservative said “narrative fragility alone can trigger covering… but without catalyst capital decays. Unpredictable timing argues for minimal pilot, not 1.25% NAV” → Partially concede — timing uncertain. But 0.5% NAV so token that even large % upside leaves P&L immaterial, erasing purpose of asymmetric bet. 1.25% NAV is aggressive but bounded; capping loss at 11% of position, ~0.14% of NAV if stop hit clean — not reckless. (Med) Breaks if: portfolio already heavily correlated to high-growth software; adjust down if so.
+- Neutral/Conservative said “confirmation triggers vague, sequence risk real” → Concede. Hard-code add-on triggers: second tranche ONLY on close above $141.50 with volume expansion AND MACD histogram positive; third on close above $145.70 same conditions. No add-ons below $141.50 regardless of plan rating. Prevents premature full-sizing on noise. (High)
+
+Risk controls:
+- First tranche 1/3 target weight. Position risk (entry to $122.68 stop = $15.12) capped at 1.25% NAV. Convexity preserved: downside bounded, upside uncapped.
+- Hard stop $122.68 plan-specified. No averaging down. Second tranche only on close above $141.50 with volume expansion AND MACD histogram positive. Third on close above $145.70 same conditions. No add-ons below $141.50.
+- Early-exit: close below $133.02 (5/8 intraday low) with ATR expanding above $7.00 → cut half position, adjust stop to $130.00. Preempts bear acceleration gap-loss, per Market Report bear case trigger.
+- Time stop: if no close above $141.50 within 15 trading days AND RSI remains below 40, exit residual position — squeeze thesis decayed. Hedge: if market offers long OTM puts at $125 strike, add to convexify further (reports lack options data — cannot specify).
+
+What would change my view:
+- Insider selling cluster post-earnings (Form 4 filings) → breaks contrarian thesis; exit entire position immediately. (Per Sentiment: insider buying confirms, selling breaks)
+- Close below $130 with expanding ATR above $7.00 and volume surge (bear case activation per Market Report) → flip neutral, exit early before $122.68 stop hit; bear trend accelerating.
+- Q1 2026 filing shows revenue growth YoY deceleration below 50% or deferred revenue growth <40% (Fundamentals watchlist) → growth sustainability broken; bull case invalidated, exit.

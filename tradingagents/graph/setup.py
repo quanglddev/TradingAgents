@@ -20,22 +20,40 @@ class GraphSetup:
         tool_nodes: Dict[str, ToolNode],
         conditional_logic: ConditionalLogic,
         config: Dict[str, Any] | None = None,
+        agent_llm_map: Dict[str, Any] | None = None,
     ):
-        """Initialize with required components."""
+        """Initialize with required components.
+
+        ``agent_llm_map`` (optional) lets the caller pin a specific LLM
+        instance to a specific agent name (e.g. for the multi-provider
+        ``tradingagents-quorum`` CLI). Unmapped agents fall back to the
+        legacy ``thinking_policy`` selection between quick and deep.
+        """
         self.quick_thinking_llm = quick_thinking_llm
         self.deep_thinking_llm = deep_thinking_llm
         self.tool_nodes = tool_nodes
         self.conditional_logic = conditional_logic
         self.config = config or {}
+        self.agent_llm_map = agent_llm_map or {}
 
     def _llm_for(self, agent_name: str) -> Any:
-        """Select quick vs deep LLM for a named agent node."""
+        """Select the LLM for a named agent node.
+
+        Resolution order:
+        1. Per-agent override in ``agent_llm_map`` (quorum mode).
+        2. Configured ``thinking_policy``: ``all_deep`` returns the deep
+           LLM for every agent.
+        3. Legacy "balanced" routing: deep only for the two synthesis
+           judges (Research Manager, Portfolio Manager).
+        """
+        if agent_name in self.agent_llm_map:
+            return self.agent_llm_map[agent_name]
+
         policy = (self.config.get("thinking_policy") or "balanced").strip().lower()
 
         if policy in ("all_deep", "overdo", "deep"):
             return self.deep_thinking_llm
 
-        # Balanced / legacy routing: reserve deep for synthesis/judge agents.
         if agent_name in ("Research Manager", "Portfolio Manager"):
             return self.deep_thinking_llm
         return self.quick_thinking_llm

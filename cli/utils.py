@@ -149,7 +149,8 @@ def select_prompt_style() -> str:
     choice = questionary.select(
         "Select Your [Prompt Style]:",
         choices=[questionary.Choice(display, value=value) for display, value in STYLE_OPTIONS],
-        default=STYLE_OPTIONS[0][0],
+        # `questionary.select` default must match a choice value (not the display label).
+        default=STYLE_OPTIONS[0][1],
         instruction="\n- Use arrow keys to navigate\n- Press Enter to select",
         style=questionary.Style(
             [

@@ -15,6 +15,10 @@ DEFAULT_CONFIG = {
     "llm_provider": "openai",
     "deep_think_llm": "gpt-5.4",
     "quick_think_llm": "gpt-5.4-mini",
+    # Thinking policy: controls which agents use deep vs quick LLM.
+    # - "all_deep": route *all* agents to deep_think_llm (max quality / cost)
+    # - "balanced": default historical behavior (deep only for managers)
+    "thinking_policy": os.getenv("TRADINGAGENTS_THINKING_POLICY", "all_deep"),
     # When None, each provider's client falls back to its own default endpoint
     # (api.openai.com for OpenAI, generativelanguage.googleapis.com for Gemini, ...).
     # The CLI overrides this per provider when the user picks one. Keeping a
@@ -31,6 +35,9 @@ DEFAULT_CONFIG = {
     # Output language for analyst reports and final decision
     # Internal agent debate stays in English for reasoning quality
     "output_language": "English",
+    # Output style for agent prose. "caveman" = terse, low-filler writing.
+    # Applied via prompt instructions; does not change structured schema shape.
+    "prompt_style": os.getenv("TRADINGAGENTS_PROMPT_STYLE", "default"),
     # Debate and discussion settings
     "max_debate_rounds": 1,
     "max_risk_discuss_rounds": 1,

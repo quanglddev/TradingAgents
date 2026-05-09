@@ -134,6 +134,39 @@ def select_research_depth() -> int:
     return choice
 
 
+def select_prompt_style() -> str:
+    """Select prompt style for agent prose.
+
+    Values map to ``config["prompt_style"]``.
+    - "caveman": terse, low-filler style instruction injected once into prompts
+    - "default": no extra style instruction (normal behavior)
+    """
+    STYLE_OPTIONS = [
+        ("Caveman (default) - think more, talk less; concise reports", "caveman"),
+        ("Normal - no extra style instruction", "default"),
+    ]
+
+    choice = questionary.select(
+        "Select Your [Prompt Style]:",
+        choices=[questionary.Choice(display, value=value) for display, value in STYLE_OPTIONS],
+        default=STYLE_OPTIONS[0][0],
+        instruction="\n- Use arrow keys to navigate\n- Press Enter to select",
+        style=questionary.Style(
+            [
+                ("selected", "fg:cyan noinherit"),
+                ("highlighted", "fg:cyan noinherit"),
+                ("pointer", "fg:cyan noinherit"),
+            ]
+        ),
+    ).ask()
+
+    if choice is None:
+        # Default to caveman for token efficiency.
+        return "caveman"
+
+    return choice
+
+
 def _fetch_openrouter_models() -> List[Tuple[str, str]]:
     """Fetch available models from the OpenRouter API."""
     import requests

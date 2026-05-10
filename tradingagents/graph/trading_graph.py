@@ -2,10 +2,11 @@
 
 import logging
 import os
+from contextlib import contextmanager
 from pathlib import Path
 import json
 from datetime import datetime, timedelta
-from typing import Dict, Any, Tuple, List, Optional
+from typing import Dict, Any, Iterator, Tuple, List, Optional
 
 import yfinance as yf
 
@@ -39,7 +40,13 @@ from tradingagents.agents.utils.agent_utils import (
     get_global_news
 )
 
-from .checkpointer import checkpoint_step, clear_checkpoint, get_checkpointer, thread_id
+from .checkpointer import (
+    checkpoint_step,
+    clear_checkpoint,
+    get_checkpointer,
+    has_checkpoint,
+    thread_id,
+)
 from .conditional_logic import ConditionalLogic
 from .setup import GraphSetup
 from .propagation import Propagator
@@ -252,6 +259,131 @@ class TradingAgentsGraph:
             )
             return None, None, None
 
+    # --- Public hooks for entry points that drive the graph manually ---
+
+    def has_pending_checkpoint(self, ticker: str, trade_date) -> bool:
+        """Return True if a resumable checkpoint exists for this run.
+
+        Wraps :func:`tradingagents.graph.checkpointer.has_checkpoint`
+        so callers (CLI surfaces, dashboards) don't need to import the
+        low-level module or know the cache directory layout. Returns
+        False when checkpointing is disabled or no prior crash left a
+        checkpoint behind.
+        """
+        if not self.config.get("checkpoint_enabled"):
+            return False
+        return has_checkpoint(
+            self.config["data_cache_dir"], ticker, str(trade_date)
+        )
+
+    @contextmanager
+    def checkpointed_run(
+        self, ticker: str, trade_date
+    ) -> Iterator[Optional[str]]:
+        """Compile the graph against a per-ticker SqliteSaver for the
+        duration of the context, then restore the plain compilation on
+        exit.
+
+        Yields the LangGraph ``thread_id`` for this run when
+        ``checkpoint_enabled`` is True, or ``None`` when checkpointing
+        is disabled (in which case this context manager is a pass-
+        through). Callers must inject the yielded thread_id into the
+        ``args`` they pass to :meth:`graph.stream`/:meth:`graph.invoke`
+        so LangGraph routes state to the right thread::
+
+            with graph.checkpointed_run(ticker, date) as tid:
+                if tid is not None:
+                    args.setdefault("config", {}) \\
+                        .setdefault("configurable", {})["thread_id"] = tid
+                final_state = graph.graph.invoke(state, **args)
+                graph.clear_checkpoint_for(ticker, date)  # only on success
+
+        On a clean exit the per-run checkpoint is intentionally NOT
+        cleared here — that is the caller's responsibility via
+        :meth:`clear_checkpoint_for` so a crashed mid-run leaves the
+        checkpoint behind for resume.
+        """
+        if not self.config.get("checkpoint_enabled"):
+            yield None
+            return
+
+        ctx = get_checkpointer(self.config["data_cache_dir"], ticker)
+        saver = ctx.__enter__()
+        self.graph = self.workflow.compile(checkpointer=saver)
+        self._checkpointer_ctx = ctx
+        try:
+            step = checkpoint_step(
+                self.config["data_cache_dir"], ticker, str(trade_date)
+            )
+            if step is not None:
+                logger.info(
+                    "Resuming from step %d for %s on %s",
+                    step, ticker, trade_date,
+                )
+            else:
+                logger.info(
+                    "Starting fresh for %s on %s", ticker, trade_date
+                )
+            yield thread_id(ticker, str(trade_date))
+        finally:
+            ctx.__exit__(None, None, None)
+            self._checkpointer_ctx = None
+            self.graph = self.workflow.compile()
+
+    def clear_checkpoint_for(self, ticker: str, trade_date) -> None:
+        """Drop the resume-checkpoint for ``(ticker, trade_date)``.
+
+        Idempotent and a no-op when ``checkpoint_enabled`` is False.
+        Call after a run completes successfully so a future re-run for
+        the same date starts fresh; skipping it on failure preserves
+        the checkpoint so the next invocation can resume.
+        """
+        if not self.config.get("checkpoint_enabled"):
+            return
+        clear_checkpoint(
+            self.config["data_cache_dir"], ticker, str(trade_date)
+        )
+
+    def prepare_memory_context(self, ticker: str) -> str:
+        """Resolve outstanding reflections for ``ticker`` and return the
+        formatted past_context string for Portfolio Manager injection.
+
+        ``propagate()`` calls this internally. CLI entry points that
+        stream the LangGraph workflow themselves (e.g.
+        ``execute_with_live_display`` shared by ``tradingagents analyze``
+        and ``tradingagents-quorum``) call this directly so the same
+        cross-run memory that the Python API exposes is also active in
+        the interactive flows. Returns ``""`` when no prior context
+        exists or the memory log is disabled.
+        """
+        self._resolve_pending_entries(ticker)
+        return self.memory_log.get_past_context(ticker)
+
+    def record_decision(
+        self,
+        ticker: str,
+        trade_date,
+        final_state,
+    ) -> None:
+        """Persist a completed run's final decision to the memory log.
+
+        No-op when ``final_state`` lacks ``final_trade_decision`` (e.g.
+        a run interrupted before the Portfolio Manager produced output)
+        or when the memory log path is unset. ``store_decision`` itself
+        is idempotent over (ticker, trade_date), so repeated calls in
+        the same calendar day collapse to a single pending entry.
+        """
+        if not isinstance(final_state, dict):
+            return
+        decision = final_state.get("final_trade_decision")
+        if not decision:
+            return
+        self.memory_log.store_decision(
+            ticker=ticker,
+            trade_date=str(trade_date),
+            final_trade_decision=decision,
+        )
+
     def _resolve_pending_entries(self, ticker: str) -> None:
         """Resolve pending log entries for ticker at the start of a new run.
 
@@ -300,31 +432,12 @@ class TradingAgentsGraph:
         # Resolve any pending memory-log entries for this ticker before the pipeline runs.
         self._resolve_pending_entries(company_name)
 
-        # Recompile with a checkpointer if the user opted in.
-        if self.config.get("checkpoint_enabled"):
-            self._checkpointer_ctx = get_checkpointer(
-                self.config["data_cache_dir"], company_name
-            )
-            saver = self._checkpointer_ctx.__enter__()
-            self.graph = self.workflow.compile(checkpointer=saver)
-
-            step = checkpoint_step(
-                self.config["data_cache_dir"], company_name, str(trade_date)
-            )
-            if step is not None:
-                logger.info(
-                    "Resuming from step %d for %s on %s", step, company_name, trade_date
-                )
-            else:
-                logger.info("Starting fresh for %s on %s", company_name, trade_date)
-
-        try:
+        # Compile-with-checkpointer / restore lifecycle is handled by the
+        # context manager. Thread-id injection into args still happens
+        # inside ``_run_graph`` (it re-derives the same id via thread_id()),
+        # so we don't need the yielded value here.
+        with self.checkpointed_run(company_name, trade_date):
             return self._run_graph(company_name, trade_date)
-        finally:
-            if self._checkpointer_ctx is not None:
-                self._checkpointer_ctx.__exit__(None, None, None)
-                self._checkpointer_ctx = None
-                self.graph = self.workflow.compile()
 
     def _run_graph(self, company_name, trade_date):
         """Execute the graph and write the resulting state to disk and memory log."""

@@ -937,6 +937,314 @@ def format_tool_args(args, max_length=80) -> str:
         return result[:max_length - 3] + "..."
     return result
 
+def execute_with_live_display(
+    graph: TradingAgentsGraph,
+    ticker: str,
+    analysis_date: str,
+    selected_analyst_keys: list,
+    stats_handler: StatsCallbackHandler,
+    config: dict,
+) -> dict:
+    """Drive a pre-built graph through the Rich Live TUI; return final_state.
+
+    Shared by the interactive ``analyze`` command and the headless
+    ``tradingagents-quorum`` command so both surface the same progress
+    panel, streaming messages, and stats footer. The caller is
+    responsible for everything *after* this function returns
+    (saving reports, prompting / auto-displaying, etc).
+
+    Side effects:
+    - mutates the module-level ``message_buffer`` (re-initialised here).
+    - wraps ``message_buffer.add_message`` /
+      ``add_tool_call`` / ``update_report_section`` so each call also
+      writes to ``<results_dir>/message_tool.log`` and per-section
+      markdown files.
+    - creates ``<results_dir>/reports/`` for the streaming markdown.
+
+    The wrapping is one-shot per process; calling this twice in the
+    same Python process would double-wrap, but both CLI entry points
+    invoke it exactly once.
+    """
+    message_buffer.init_for_analysis(selected_analyst_keys)
+
+    start_time = time.time()
+
+    results_dir = Path(config["results_dir"]) / ticker / analysis_date
+    results_dir.mkdir(parents=True, exist_ok=True)
+    report_dir = results_dir / "reports"
+    report_dir.mkdir(parents=True, exist_ok=True)
+    log_file = results_dir / "message_tool.log"
+    log_file.touch(exist_ok=True)
+
+    def save_message_decorator(obj, func_name):
+        func = getattr(obj, func_name)
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            func(*args, **kwargs)
+            timestamp, message_type, content = obj.messages[-1]
+            content = content.replace("\n", " ")
+            with open(log_file, "a", encoding="utf-8") as f:
+                f.write(f"{timestamp} [{message_type}] {content}\n")
+        return wrapper
+
+    def save_tool_call_decorator(obj, func_name):
+        func = getattr(obj, func_name)
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            func(*args, **kwargs)
+            timestamp, tool_name, args = obj.tool_calls[-1]
+            args_str = ", ".join(f"{k}={v}" for k, v in args.items())
+            with open(log_file, "a", encoding="utf-8") as f:
+                f.write(f"{timestamp} [Tool Call] {tool_name}({args_str})\n")
+        return wrapper
+
+    def save_report_section_decorator(obj, func_name):
+        func = getattr(obj, func_name)
+        @wraps(func)
+        def wrapper(section_name, content):
+            func(section_name, content)
+            if section_name in obj.report_sections and obj.report_sections[section_name] is not None:
+                content = obj.report_sections[section_name]
+                if content:
+                    file_name = f"{section_name}.md"
+                    text = "\n".join(str(item) for item in content) if isinstance(content, list) else content
+                    with open(report_dir / file_name, "w", encoding="utf-8") as f:
+                        f.write(text)
+        return wrapper
+
+    message_buffer.add_message = save_message_decorator(message_buffer, "add_message")
+    message_buffer.add_tool_call = save_tool_call_decorator(message_buffer, "add_tool_call")
+    message_buffer.update_report_section = save_report_section_decorator(message_buffer, "update_report_section")
+
+    layout = create_layout()
+
+    with Live(layout, refresh_per_second=4) as live:
+        update_display(layout, stats_handler=stats_handler, start_time=start_time)
+
+        message_buffer.add_message("System", f"Selected ticker: {ticker}")
+        message_buffer.add_message("System", f"Analysis date: {analysis_date}")
+        message_buffer.add_message(
+            "System",
+            f"Selected analysts: {', '.join(selected_analyst_keys)}",
+        )
+
+        # Memory log: resolve outstanding reflections for this ticker and
+        # build the past_context string that gets injected into the
+        # Portfolio Manager prompt. ``propagate()`` does this for the
+        # Python API; we replicate it here so the interactive ``analyze``
+        # and ``tradingagents-quorum`` flows accumulate cross-run memory
+        # too. Wrapped in try/except so any memory-side failure (corrupt
+        # log, yfinance hiccup, missing reflector LLM) is surfaced as a
+        # System message and never aborts the user's analysis.
+        past_context = ""
+        try:
+            past_context = graph.prepare_memory_context(ticker)
+        except Exception as exc:
+            message_buffer.add_message(
+                "System",
+                f"Memory context skipped (error: {exc})",
+            )
+        else:
+            if past_context:
+                try:
+                    n_prior = sum(
+                        1 for e in graph.memory_log.load_entries()
+                        if e["ticker"] == ticker and not e.get("pending")
+                    )
+                except Exception:
+                    n_prior = 0
+                message_buffer.add_message(
+                    "System",
+                    f"Loaded {n_prior} prior decision(s) for {ticker} into Portfolio Manager context",
+                )
+            else:
+                message_buffer.add_message(
+                    "System",
+                    f"No prior memory for {ticker} (first run, or pending reflections not yet resolvable)",
+                )
+        update_display(layout, stats_handler=stats_handler, start_time=start_time)
+
+        first_analyst = f"{selected_analyst_keys[0].capitalize()} Analyst"
+        message_buffer.update_agent_status(first_analyst, "in_progress")
+        update_display(layout, stats_handler=stats_handler, start_time=start_time)
+
+        spinner_text = f"Analyzing {ticker} on {analysis_date}..."
+        update_display(layout, spinner_text, stats_handler=stats_handler, start_time=start_time)
+
+        init_agent_state = graph.propagator.create_initial_state(
+            ticker, analysis_date, past_context=past_context
+        )
+        args = graph.propagator.get_graph_args(callbacks=[stats_handler])
+
+        # Checkpoint resume: when enabled, surface whether the run is
+        # starting fresh or resuming from a prior crash so the user
+        # can see in the TUI why progress jumps mid-pipeline. Read
+        # before opening the context manager (which would otherwise
+        # only emit the same info via logger.info, hidden by Live).
+        if config.get("checkpoint_enabled"):
+            try:
+                if graph.has_pending_checkpoint(ticker, analysis_date):
+                    message_buffer.add_message(
+                        "System",
+                        f"Resuming saved checkpoint for {ticker} on {analysis_date}",
+                    )
+                else:
+                    message_buffer.add_message(
+                        "System",
+                        "Checkpoint enabled (saves progress every node)",
+                    )
+            except Exception as exc:
+                message_buffer.add_message(
+                    "System",
+                    f"Could not read checkpoint state (error: {exc})",
+                )
+            update_display(layout, stats_handler=stats_handler, start_time=start_time)
+
+        # Compile against a per-ticker SqliteSaver while ``checkpoint_enabled``
+        # is True so a crashed run resumes from the last successful node on
+        # the next invocation; the plain (un-checkpointed) graph is restored
+        # on context exit. When disabled, this is a pass-through and
+        # ``cp_thread_id`` is None.
+        with graph.checkpointed_run(ticker, analysis_date) as cp_thread_id:
+            if cp_thread_id is not None:
+                args.setdefault("config", {}).setdefault(
+                    "configurable", {}
+                )["thread_id"] = cp_thread_id
+
+            trace = []
+            for chunk in graph.graph.stream(init_agent_state, **args):
+                for message in chunk.get("messages", []):
+                    msg_id = getattr(message, "id", None)
+                    if msg_id is not None:
+                        if msg_id in message_buffer._processed_message_ids:
+                            continue
+                        message_buffer._processed_message_ids.add(msg_id)
+
+                    msg_type, content = classify_message_type(message)
+                    if content and content.strip():
+                        message_buffer.add_message(msg_type, content)
+
+                    if hasattr(message, "tool_calls") and message.tool_calls:
+                        for tool_call in message.tool_calls:
+                            if isinstance(tool_call, dict):
+                                message_buffer.add_tool_call(tool_call["name"], tool_call["args"])
+                            else:
+                                message_buffer.add_tool_call(tool_call.name, tool_call.args)
+
+                update_analyst_statuses(message_buffer, chunk)
+
+                if chunk.get("investment_debate_state"):
+                    debate_state = chunk["investment_debate_state"]
+                    bull_hist = debate_state.get("bull_history", "").strip()
+                    bear_hist = debate_state.get("bear_history", "").strip()
+                    judge = debate_state.get("judge_decision", "").strip()
+
+                    if bull_hist or bear_hist:
+                        update_research_team_status("in_progress")
+                    if bull_hist:
+                        message_buffer.update_report_section(
+                            "investment_plan", f"### Bull Researcher Analysis\n{bull_hist}"
+                        )
+                    if bear_hist:
+                        message_buffer.update_report_section(
+                            "investment_plan", f"### Bear Researcher Analysis\n{bear_hist}"
+                        )
+                    if judge:
+                        message_buffer.update_report_section(
+                            "investment_plan", f"### Research Manager Decision\n{judge}"
+                        )
+                        update_research_team_status("completed")
+                        message_buffer.update_agent_status("Trader", "in_progress")
+
+                if chunk.get("trader_investment_plan"):
+                    message_buffer.update_report_section(
+                        "trader_investment_plan", chunk["trader_investment_plan"]
+                    )
+                    if message_buffer.agent_status.get("Trader") != "completed":
+                        message_buffer.update_agent_status("Trader", "completed")
+                        message_buffer.update_agent_status("Aggressive Analyst", "in_progress")
+
+                if chunk.get("risk_debate_state"):
+                    risk_state = chunk["risk_debate_state"]
+                    agg_hist = risk_state.get("aggressive_history", "").strip()
+                    con_hist = risk_state.get("conservative_history", "").strip()
+                    neu_hist = risk_state.get("neutral_history", "").strip()
+                    judge = risk_state.get("judge_decision", "").strip()
+
+                    if agg_hist:
+                        if message_buffer.agent_status.get("Aggressive Analyst") != "completed":
+                            message_buffer.update_agent_status("Aggressive Analyst", "in_progress")
+                        message_buffer.update_report_section(
+                            "final_trade_decision", f"### Aggressive Analyst Analysis\n{agg_hist}"
+                        )
+                    if con_hist:
+                        if message_buffer.agent_status.get("Conservative Analyst") != "completed":
+                            message_buffer.update_agent_status("Conservative Analyst", "in_progress")
+                        message_buffer.update_report_section(
+                            "final_trade_decision", f"### Conservative Analyst Analysis\n{con_hist}"
+                        )
+                    if neu_hist:
+                        if message_buffer.agent_status.get("Neutral Analyst") != "completed":
+                            message_buffer.update_agent_status("Neutral Analyst", "in_progress")
+                        message_buffer.update_report_section(
+                            "final_trade_decision", f"### Neutral Analyst Analysis\n{neu_hist}"
+                        )
+                    if judge:
+                        if message_buffer.agent_status.get("Portfolio Manager") != "completed":
+                            message_buffer.update_agent_status("Portfolio Manager", "in_progress")
+                            message_buffer.update_report_section(
+                                "final_trade_decision", f"### Portfolio Manager Decision\n{judge}"
+                            )
+                            message_buffer.update_agent_status("Aggressive Analyst", "completed")
+                            message_buffer.update_agent_status("Conservative Analyst", "completed")
+                            message_buffer.update_agent_status("Neutral Analyst", "completed")
+                            message_buffer.update_agent_status("Portfolio Manager", "completed")
+
+                update_display(layout, stats_handler=stats_handler, start_time=start_time)
+                trace.append(chunk)
+
+            final_state = trace[-1]
+
+            # Memory log: persist the final decision as a pending entry
+            # so the next run for this ticker can fetch the 5-day
+            # forward outcome, generate a reflection, and inject the
+            # lesson into the Portfolio Manager prompt. Idempotent on
+            # (ticker, trade_date), so re-running the same date today
+            # only writes once.
+            try:
+                graph.record_decision(ticker, analysis_date, final_state)
+            except Exception as exc:
+                message_buffer.add_message(
+                    "System",
+                    f"Decision not persisted to memory log (error: {exc})",
+                )
+
+            # Checkpoint: clear on successful completion only. Skipping
+            # this on stream failure is intentional — the checkpoint
+            # persists so the next invocation can resume from the last
+            # successful node.
+            try:
+                graph.clear_checkpoint_for(ticker, analysis_date)
+            except Exception as exc:
+                message_buffer.add_message(
+                    "System",
+                    f"Could not clear checkpoint after success (error: {exc})",
+                )
+
+        for agent in message_buffer.agent_status:
+            message_buffer.update_agent_status(agent, "completed")
+
+        message_buffer.add_message("System", f"Completed analysis for {analysis_date}")
+
+        for section in message_buffer.report_sections.keys():
+            if section in final_state:
+                message_buffer.update_report_section(section, final_state[section])
+
+        update_display(layout, stats_handler=stats_handler, start_time=start_time)
+
+    return final_state
+
+
 def run_analysis(checkpoint: bool = False):
     # First get all user selections
     selections = get_user_selections()
@@ -972,216 +1280,14 @@ def run_analysis(checkpoint: bool = False):
         callbacks=[stats_handler],
     )
 
-    # Initialize message buffer with selected analysts
-    message_buffer.init_for_analysis(selected_analyst_keys)
-
-    # Track start time for elapsed display
-    start_time = time.time()
-
-    # Create result directory
-    results_dir = Path(config["results_dir"]) / selections["ticker"] / selections["analysis_date"]
-    results_dir.mkdir(parents=True, exist_ok=True)
-    report_dir = results_dir / "reports"
-    report_dir.mkdir(parents=True, exist_ok=True)
-    log_file = results_dir / "message_tool.log"
-    log_file.touch(exist_ok=True)
-
-    def save_message_decorator(obj, func_name):
-        func = getattr(obj, func_name)
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            func(*args, **kwargs)
-            timestamp, message_type, content = obj.messages[-1]
-            content = content.replace("\n", " ")  # Replace newlines with spaces
-            with open(log_file, "a", encoding="utf-8") as f:
-                f.write(f"{timestamp} [{message_type}] {content}\n")
-        return wrapper
-    
-    def save_tool_call_decorator(obj, func_name):
-        func = getattr(obj, func_name)
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            func(*args, **kwargs)
-            timestamp, tool_name, args = obj.tool_calls[-1]
-            args_str = ", ".join(f"{k}={v}" for k, v in args.items())
-            with open(log_file, "a", encoding="utf-8") as f:
-                f.write(f"{timestamp} [Tool Call] {tool_name}({args_str})\n")
-        return wrapper
-
-    def save_report_section_decorator(obj, func_name):
-        func = getattr(obj, func_name)
-        @wraps(func)
-        def wrapper(section_name, content):
-            func(section_name, content)
-            if section_name in obj.report_sections and obj.report_sections[section_name] is not None:
-                content = obj.report_sections[section_name]
-                if content:
-                    file_name = f"{section_name}.md"
-                    text = "\n".join(str(item) for item in content) if isinstance(content, list) else content
-                    with open(report_dir / file_name, "w", encoding="utf-8") as f:
-                        f.write(text)
-        return wrapper
-
-    message_buffer.add_message = save_message_decorator(message_buffer, "add_message")
-    message_buffer.add_tool_call = save_tool_call_decorator(message_buffer, "add_tool_call")
-    message_buffer.update_report_section = save_report_section_decorator(message_buffer, "update_report_section")
-
-    # Now start the display layout
-    layout = create_layout()
-
-    with Live(layout, refresh_per_second=4) as live:
-        # Initial display
-        update_display(layout, stats_handler=stats_handler, start_time=start_time)
-
-        # Add initial messages
-        message_buffer.add_message("System", f"Selected ticker: {selections['ticker']}")
-        message_buffer.add_message(
-            "System", f"Analysis date: {selections['analysis_date']}"
-        )
-        message_buffer.add_message(
-            "System",
-            f"Selected analysts: {', '.join(analyst.value for analyst in selections['analysts'])}",
-        )
-        update_display(layout, stats_handler=stats_handler, start_time=start_time)
-
-        # Update agent status to in_progress for the first analyst
-        first_analyst = f"{selections['analysts'][0].value.capitalize()} Analyst"
-        message_buffer.update_agent_status(first_analyst, "in_progress")
-        update_display(layout, stats_handler=stats_handler, start_time=start_time)
-
-        # Create spinner text
-        spinner_text = (
-            f"Analyzing {selections['ticker']} on {selections['analysis_date']}..."
-        )
-        update_display(layout, spinner_text, stats_handler=stats_handler, start_time=start_time)
-
-        # Initialize state and get graph args with callbacks
-        init_agent_state = graph.propagator.create_initial_state(
-            selections["ticker"], selections["analysis_date"]
-        )
-        # Pass callbacks to graph config for tool execution tracking
-        # (LLM tracking is handled separately via LLM constructor)
-        args = graph.propagator.get_graph_args(callbacks=[stats_handler])
-
-        # Stream the analysis
-        trace = []
-        for chunk in graph.graph.stream(init_agent_state, **args):
-            # Process all messages in chunk, deduplicating by message ID
-            for message in chunk.get("messages", []):
-                msg_id = getattr(message, "id", None)
-                if msg_id is not None:
-                    if msg_id in message_buffer._processed_message_ids:
-                        continue
-                    message_buffer._processed_message_ids.add(msg_id)
-
-                msg_type, content = classify_message_type(message)
-                if content and content.strip():
-                    message_buffer.add_message(msg_type, content)
-
-                if hasattr(message, "tool_calls") and message.tool_calls:
-                    for tool_call in message.tool_calls:
-                        if isinstance(tool_call, dict):
-                            message_buffer.add_tool_call(tool_call["name"], tool_call["args"])
-                        else:
-                            message_buffer.add_tool_call(tool_call.name, tool_call.args)
-
-            # Update analyst statuses based on report state (runs on every chunk)
-            update_analyst_statuses(message_buffer, chunk)
-
-            # Research Team - Handle Investment Debate State
-            if chunk.get("investment_debate_state"):
-                debate_state = chunk["investment_debate_state"]
-                bull_hist = debate_state.get("bull_history", "").strip()
-                bear_hist = debate_state.get("bear_history", "").strip()
-                judge = debate_state.get("judge_decision", "").strip()
-
-                # Only update status when there's actual content
-                if bull_hist or bear_hist:
-                    update_research_team_status("in_progress")
-                if bull_hist:
-                    message_buffer.update_report_section(
-                        "investment_plan", f"### Bull Researcher Analysis\n{bull_hist}"
-                    )
-                if bear_hist:
-                    message_buffer.update_report_section(
-                        "investment_plan", f"### Bear Researcher Analysis\n{bear_hist}"
-                    )
-                if judge:
-                    message_buffer.update_report_section(
-                        "investment_plan", f"### Research Manager Decision\n{judge}"
-                    )
-                    update_research_team_status("completed")
-                    message_buffer.update_agent_status("Trader", "in_progress")
-
-            # Trading Team
-            if chunk.get("trader_investment_plan"):
-                message_buffer.update_report_section(
-                    "trader_investment_plan", chunk["trader_investment_plan"]
-                )
-                if message_buffer.agent_status.get("Trader") != "completed":
-                    message_buffer.update_agent_status("Trader", "completed")
-                    message_buffer.update_agent_status("Aggressive Analyst", "in_progress")
-
-            # Risk Management Team - Handle Risk Debate State
-            if chunk.get("risk_debate_state"):
-                risk_state = chunk["risk_debate_state"]
-                agg_hist = risk_state.get("aggressive_history", "").strip()
-                con_hist = risk_state.get("conservative_history", "").strip()
-                neu_hist = risk_state.get("neutral_history", "").strip()
-                judge = risk_state.get("judge_decision", "").strip()
-
-                if agg_hist:
-                    if message_buffer.agent_status.get("Aggressive Analyst") != "completed":
-                        message_buffer.update_agent_status("Aggressive Analyst", "in_progress")
-                    message_buffer.update_report_section(
-                        "final_trade_decision", f"### Aggressive Analyst Analysis\n{agg_hist}"
-                    )
-                if con_hist:
-                    if message_buffer.agent_status.get("Conservative Analyst") != "completed":
-                        message_buffer.update_agent_status("Conservative Analyst", "in_progress")
-                    message_buffer.update_report_section(
-                        "final_trade_decision", f"### Conservative Analyst Analysis\n{con_hist}"
-                    )
-                if neu_hist:
-                    if message_buffer.agent_status.get("Neutral Analyst") != "completed":
-                        message_buffer.update_agent_status("Neutral Analyst", "in_progress")
-                    message_buffer.update_report_section(
-                        "final_trade_decision", f"### Neutral Analyst Analysis\n{neu_hist}"
-                    )
-                if judge:
-                    if message_buffer.agent_status.get("Portfolio Manager") != "completed":
-                        message_buffer.update_agent_status("Portfolio Manager", "in_progress")
-                        message_buffer.update_report_section(
-                            "final_trade_decision", f"### Portfolio Manager Decision\n{judge}"
-                        )
-                        message_buffer.update_agent_status("Aggressive Analyst", "completed")
-                        message_buffer.update_agent_status("Conservative Analyst", "completed")
-                        message_buffer.update_agent_status("Neutral Analyst", "completed")
-                        message_buffer.update_agent_status("Portfolio Manager", "completed")
-
-            # Update the display
-            update_display(layout, stats_handler=stats_handler, start_time=start_time)
-
-            trace.append(chunk)
-
-        # Get final state and decision
-        final_state = trace[-1]
-        decision = graph.process_signal(final_state["final_trade_decision"])
-
-        # Update all agent statuses to completed
-        for agent in message_buffer.agent_status:
-            message_buffer.update_agent_status(agent, "completed")
-
-        message_buffer.add_message(
-            "System", f"Completed analysis for {selections['analysis_date']}"
-        )
-
-        # Update final report sections
-        for section in message_buffer.report_sections.keys():
-            if section in final_state:
-                message_buffer.update_report_section(section, final_state[section])
-
-        update_display(layout, stats_handler=stats_handler, start_time=start_time)
+    final_state = execute_with_live_display(
+        graph,
+        selections["ticker"],
+        selections["analysis_date"],
+        selected_analyst_keys,
+        stats_handler,
+        config,
+    )
 
     # Post-analysis prompts (outside Live context for clean interaction)
     console.print("\n[bold cyan]Analysis Complete![/bold cyan]\n")

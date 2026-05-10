@@ -22,10 +22,8 @@ with an explicit list of missing keys instead of partial-running.
 from __future__ import annotations
 
 import datetime as _dt
-import logging
 import os
 import sys
-import time
 from pathlib import Path
 from typing import List, Optional
 
@@ -41,9 +39,14 @@ from rich.rule import Rule
 load_dotenv()
 load_dotenv(".env.enterprise", override=False)
 
-# Reuse the report writer / display from the interactive CLI so the
-# on-disk layout stays consistent across both entry points.
-from cli.main import display_complete_report, save_report_to_disk
+# Reuse the live TUI / report writer / display from the interactive CLI
+# so both entry points show the same progress panel + stats footer and
+# write the same on-disk layout.
+from cli.main import (
+    display_complete_report,
+    execute_with_live_display,
+    save_report_to_disk,
+)
 from cli.stats_handler import StatsCallbackHandler
 from tradingagents.agent_model_routing import (
     build_quorum_llm_map,
@@ -56,7 +59,6 @@ from tradingagents.graph.trading_graph import TradingAgentsGraph
 
 
 console = Console()
-logger = logging.getLogger("tradingagents.quorum")
 
 
 app = typer.Typer(
@@ -264,29 +266,26 @@ def run(
         reflector_llm=reflector_llm,
     )
 
-    console.print(
-        Rule(
-            f"Running quorum analysis for [bold cyan]{ticker}[/bold cyan] "
-            f"on [bold]{analysis_date}[/bold]",
-            style="green",
-        )
+    # Run inside the same Rich Live TUI as the interactive CLI so the
+    # user sees the agent-progress panel, streaming messages/tool calls,
+    # and stats footer (LLM count / tokens / elapsed) while the run
+    # proceeds, instead of a silent multi-minute black box.
+    final_state = execute_with_live_display(
+        graph,
+        ticker,
+        analysis_date,
+        list(_DEFAULT_ANALYSTS),
+        stats_handler,
+        config,
     )
 
-    start = time.time()
-    try:
-        final_state, decision = graph.propagate(ticker, analysis_date)
-    except Exception:
-        logger.exception("Quorum analysis failed for %s on %s", ticker, analysis_date)
-        raise
-
-    elapsed = time.time() - start
+    decision = graph.process_signal(final_state["final_trade_decision"])
 
     stats = stats_handler.get_stats()
     console.print(
         Panel(
             (
                 f"[bold]Final rating[/bold]: {decision}\n"
-                f"[bold]Elapsed[/bold]: {int(elapsed // 60):02d}:{int(elapsed % 60):02d}\n"
                 f"[bold]LLM calls[/bold]: {stats.get('llm_calls', 0)}\n"
                 f"[bold]Tool calls[/bold]: {stats.get('tool_calls', 0)}\n"
                 f"[bold]Tokens[/bold]: "
